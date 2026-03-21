@@ -1,72 +1,68 @@
--- startup.lua
--- A faithful BIOS-style bootloader. Blinks a cursor, locks the
--- keyboard, and boots from a disk the moment one is inserted.
-
-term.setBackgroundColor(colors.black)
+term.setBackgroundColor(colors.blue)
 term.setTextColor(colors.white)
 term.clear()
-term.setCursorPos(1, 1)
 
-local sides = {"left", "right", "top", "bottom", "front", "back"}
+local w, h = term.getSize()
 
-local function findBootDisk()
-  for _, side in ipairs(sides) do
-    if disk.isPresent(side) then
-      local bootFile = disk.getMountPath(side) .. "/startup"
-      if fs.exists(bootFile) then
-        return bootFile
-      end
-    end
-  end
-  return nil
+local function writeBottom(text, bgCol, textCol)
+  term.setBackgroundColor(bgCol or colors.gray)
+  term.setTextColor(textCol or colors.white)
+  term.setCursorPos(1, h)
+  local padded = " " .. text .. string.rep(" ", w - #text - 1)
+  io.write(padded)
+  term.setBackgroundColor(colors.blue)
+  term.setTextColor(colors.white)
 end
 
--- This draws the error message and places the blinking cursor
--- on the line below, just like in your screenshot.
-local function drawScreen(showCursor)
-  term.clear()
+local function drawHeader(title)
+  term.setBackgroundColor(colors.blue)
   term.setCursorPos(1, 1)
-  print("No bootable medium found!")
-  print("Please insert a bootable medium and reboot.")
-  -- Move to the next line and draw the underscore if it's
-  -- the "on" phase of the blink cycle.
-  term.setCursorPos(1, 3)
-  if showCursor then
-    io.write("_")  -- io.write won't add a newline, keeping it in place
-  end
+  term.setTextColor(colors.white)
+  print(" " .. title)
+  print(" " .. string.rep("-", #title))
 end
 
--- We use os.startTimer to drive the blinking, and os.pullEvent
--- to wait for events. Crucially, we ONLY act on "timer" and "disk"
--- events -- all keypresses and other events are silently swallowed,
--- which is what locks the keyboard completely.
-local cursorVisible = true
-local blinkTimer = os.startTimer(0.5)  -- blink every half second
+-- SCREEN 1: Press F6
+term.clear()
+drawHeader("Windows 2000 Setup")
+writeBottom("Press F6 if you need to install a third party SCSI or RAID driver...")
+sleep(3)
 
+-- SCREEN 2: Setup is starting
+term.clear()
+drawHeader("Windows 2000 Setup")
+writeBottom("Setup is starting Windows 2000")
+sleep(3)
+
+-- SCREEN 3: Welcome to Setup
+term.clear()
+term.setBackgroundColor(colors.blue)
+drawHeader("Windows 2000 Professional Setup")
+term.setCursorPos(3, 4)
+print("Welcome to Setup.")
+term.setCursorPos(3, 6)
+print("This portion of the Setup program prepares Microsoft(R)")
+term.setCursorPos(3, 7)
+print("Windows 2000(TM) to run on your computer.")
+term.setCursorPos(3, 9)
+print("  * To set up Windows 2000 now, press ENTER.")
+term.setCursorPos(3, 11)
+print("  * To repair a Windows 2000 installation, press R.")
+term.setCursorPos(3, 13)
+print("  * To quit Setup without installing Windows 2000, press F3.")
+writeBottom("ENTER=Continue   R=Repair   F3=Quit")
+
+-- Wait for keypress
 while true do
-  local bootFile = findBootDisk()
-
-  if bootFile then
-    term.clear()
-    term.setCursorPos(1, 1)
-    print("Bootable medium found. Booting...")
-    sleep(1)
-    shell.run(bootFile)
+  local event, key = os.pullEvent("key")
+  if key == keys.enter then
+    -- continue to next screen (add more here later)
     break
+  elseif key == keys.f3 then
+    term.clear()
+    term.setCursorPos(1,1)
+    print("Setup aborted.")
+    sleep(2)
+    os.reboot()
   end
-
-  -- Draw the screen with the current cursor state
-  drawScreen(cursorVisible)
-
-  -- Wait for the next event, but ONLY respond to timer and disk events.
-  -- Any keypress events are pulled and thrown away -- the user is locked out.
-  local event, id = os.pullEvent()
-
-  if event == "timer" and id == blinkTimer then
-    -- Flip the cursor visibility and restart the timer
-    cursorVisible = not cursorVisible
-    blinkTimer = os.startTimer(0.5)
-  end
-  -- "disk" events don't need handling here -- the loop restarts
-  -- and findBootDisk() will catch the newly inserted disk naturally.
 end
