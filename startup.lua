@@ -16,8 +16,8 @@ end
 
 local function showQuitDialog()
   local w, h = term.getSize()
-  local w0, h0 = math.min(48, w - 10), 11
-  local x0 = math.floor((w - w0) / 2)
+  local w0, h0 = math.min(50, w - 1), 10
+  local x0 = math.floor((w - w0) / 2) + 1
   local y0 = math.max(6, math.floor((h - h0) / 2))   -- start below the title region
 
   -- Outer red border (on top of blue screen background)
@@ -60,17 +60,7 @@ local function showQuitDialog()
 
   term.setTextColor(colors.red)
   term.setCursorPos(x0 + 2, y0 + 8)
-  io.write("F3=Quit    ENTER=Continue")
-
-  term.setTextColor(colors.red)
-  term.setCursorPos(x0 + 2, y0 + 5)
-  io.write("  * To continue Setup, press ENTER.")
-  term.setCursorPos(x0 + 2, y0 + 6)
-  io.write("  * To quit Setup, press F3.")
-
-  term.setTextColor(colors.red)
-  term.setCursorPos(x0 + 2, y0 + 8)
-  io.write("F3=Quit    ENTER=Continue")
+  io.write(" F3=Quit    ENTER=Continue")
 
   while true do
     local event, key = os.pullEvent("key")
