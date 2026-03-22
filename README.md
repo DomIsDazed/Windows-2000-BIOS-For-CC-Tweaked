@@ -1,1 +1,1 @@
-# Windows-2000-BIOS-For-CC-Tweaked
+# Windows-2000-OS-For-CC-Tweaked
