@@ -21,7 +21,7 @@ local function showQuitDialog()
   local y0 = math.max(6, math.floor((h - h0) / 2))   -- start below the title region
 
   -- Outer red border (on top of blue screen background)
-  term.setBackgroundColor(colors.blue)
+  term.setBackgroundColor(colors.gray)
   term.setTextColor(colors.red)
   term.setCursorPos(x0, y0)
   io.write("+" .. string.rep("-", w0 - 2) .. "+")
