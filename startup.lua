@@ -15,53 +15,69 @@ local function writeBottom(text, bgCol, textCol)
 end
 
 local function showQuitDialog()
-  -- Draw the dialog box background and border
+  local w, h = term.getSize()
+  local w0, h0 = math.min(48, w - 10), 11
+  local x0 = math.floor((w - w0) / 2)
+  local y0 = math.max(6, math.floor((h - h0) / 2))   -- start below the title region
+
+  -- Outer red border (on top of blue screen background)
+  term.setBackgroundColor(colors.blue)
+  term.setTextColor(colors.red)
+  term.setCursorPos(x0, y0)
+  io.write("+" .. string.rep("-", w0 - 2) .. "+")
+  term.setCursorPos(x0, y0 + h0 - 1)
+  io.write("+" .. string.rep("-", w0 - 2) .. "+")
+
+  for y = y0 + 1, y0 + h0 - 2 do
+    term.setCursorPos(x0, y)
+    io.write("|")
+    term.setCursorPos(x0 + w0 - 1, y)
+    io.write("|")
+  end
+
+  -- Fill interior in gray
   term.setBackgroundColor(colors.gray)
   term.setTextColor(colors.white)
-  
-  -- Draw border and fill background
-  for y = 5, 15 do
-    term.setCursorPos(8, y)
-    io.write(string.rep(" ", 65))
+  for y = y0 + 1, y0 + h0 - 2 do
+    term.setCursorPos(x0 + 1, y)
+    io.write(string.rep(" ", w0 - 2))
   end
-  
-  -- Draw box border
-  term.setCursorPos(8, 5)
-  io.write("\219" .. string.rep("\196", 63) .. "\219")
-  term.setCursorPos(8, 15)
-  io.write("\219" .. string.rep("\196", 63) .. "\219")
-  
-  for y = 6, 14 do
-    term.setCursorPos(8, y)
-    io.write("\179")
-    term.setCursorPos(72, y)
-    io.write("\179")
-  end
-  
-  -- Draw text
+
+  -- Text inside prompt
   term.setTextColor(colors.red)
-  term.setCursorPos(10, 6)
+  term.setCursorPos(x0 + 2, y0 + 1)
   io.write("Windows 2000 is not completely set up on your")
-  term.setCursorPos(10, 7)
+  term.setCursorPos(x0 + 2, y0 + 2)
   io.write("computer.  If you quit Setup now, you will need")
-  term.setCursorPos(10, 8)
+  term.setCursorPos(x0 + 2, y0 + 3)
   io.write("to run Setup again to set up Windows 2000.")
-  
-  term.setCursorPos(10, 10)
+
+  term.setTextColor(colors.red)
+  term.setCursorPos(x0 + 2, y0 + 5)
   io.write("  * To continue Setup, press ENTER.")
-  term.setCursorPos(10, 11)
+  term.setCursorPos(x0 + 2, y0 + 6)
   io.write("  * To quit Setup, press F3.")
-  
-  term.setTextColor(colors.white)
-  term.setCursorPos(10, 13)
+
+  term.setTextColor(colors.red)
+  term.setCursorPos(x0 + 2, y0 + 8)
   io.write("F3=Quit    ENTER=Continue")
-  
+
+  term.setTextColor(colors.red)
+  term.setCursorPos(x0 + 2, y0 + 5)
+  io.write("  * To continue Setup, press ENTER.")
+  term.setCursorPos(x0 + 2, y0 + 6)
+  io.write("  * To quit Setup, press F3.")
+
+  term.setTextColor(colors.red)
+  term.setCursorPos(x0 + 2, y0 + 8)
+  io.write("F3=Quit    ENTER=Continue")
+
   while true do
     local event, key = os.pullEvent("key")
     if key == keys.enter then
-      return false  -- go back to setup
+      return false
     elseif key == keys.f3 then
-      return true   -- quit setup
+      return true
     end
   end
 end
@@ -73,7 +89,30 @@ local function drawHeader(title)
   print(" " .. title)
   print(" " .. string.rep("-", #title))
 end
-
+local function showScreen3()
+  term.clear()
+  term.setBackgroundColor(colors.blue)
+  drawHeader("Windows 2000 Professional Setup")
+  term.setCursorPos(3, 4)
+  io.write("Welcome to Setup.")
+  term.setCursorPos(3, 6)
+  io.write("This portion of the Setup program prepares")
+  term.setCursorPos(3, 7)
+  io.write("Microsoft(R) Windows 2000(TM) to run on your")
+  term.setCursorPos(3, 8)
+  io.write("computer.")
+  term.setCursorPos(3, 10)
+  io.write("  * To set up Windows 2000 now, press ENTER.")
+  term.setCursorPos(3, 12)
+  io.write("  * To repair a Windows 2000 installation,")
+  term.setCursorPos(3, 13)
+  io.write("    press R.")
+  term.setCursorPos(3, 15)
+  io.write("  * To quit Setup without installing Windows")
+  term.setCursorPos(3, 16)
+  io.write("    2000, press F3.")
+  writeBottom("ENTER=Continue   R=Repair   F3=Quit")
+end
 -- SCREEN 1: Press F6
 term.clear()
 term.setBackgroundColor(colors.blue)
@@ -91,28 +130,7 @@ writeBottom("Setup is starting Windows 2000")
 sleep(3)
 
 -- SCREEN 3: Welcome to Setup
-term.clear()
-term.setBackgroundColor(colors.blue)
-drawHeader("Windows 2000 Professional Setup")
-term.setCursorPos(3, 4)
-io.write("Welcome to Setup.")
-term.setCursorPos(3, 6)
-io.write("This portion of the Setup program prepares")
-term.setCursorPos(3, 7)
-io.write("Microsoft(R) Windows 2000(TM) to run on your")
-term.setCursorPos(3, 8)
-io.write("computer.")
-term.setCursorPos(3, 10)
-io.write("  * To set up Windows 2000 now, press ENTER.")
-term.setCursorPos(3, 12)
-io.write("  * To repair a Windows 2000 installation,")
-term.setCursorPos(3, 13)
-io.write("    press R.")
-term.setCursorPos(3, 15)
-io.write("  * To quit Setup without installing Windows")
-term.setCursorPos(3, 16)
-io.write("    2000, press F3.")
-writeBottom("ENTER=Continue   R=Repair   F3=Quit")
+showScreen3()
 
 -- Wait for keypress
 while true do
@@ -123,6 +141,8 @@ while true do
   elseif key == keys.f3 then
     if showQuitDialog() then
       os.reboot()
+    else
+      showScreen3() -- redraw screen 3 after canceling F3 prompt
     end
   end
 end
