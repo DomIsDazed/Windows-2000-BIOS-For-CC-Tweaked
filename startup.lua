@@ -80,6 +80,7 @@ local function drawHeader(title)
   print(" " .. string.rep("-", #title))
 end
 local function showScreen3()
+  term.setBackgroundColor(colors.blue)
   term.clear()
   term.setBackgroundColor(colors.blue)
   drawHeader("Windows 2000 Professional Setup")
