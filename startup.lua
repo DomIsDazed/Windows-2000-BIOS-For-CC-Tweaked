@@ -1,5 +1,5 @@
--- Windows 2000 Setup Simulator for CC: Tweaked by @Searge
--- forward declerations
+---- Windows 2000 Setup Simulator for CC: Tweaked by @Searge
+-- forward declarations
 local w, h = term.getSize()
 local drawDriverScreen
 
@@ -32,6 +32,26 @@ local function drawHeader(title)
   term.setCursorPos(1, 1)
   print(" " .. title)
   print(string.rep("-", #title + 2))
+end
+
+-- HELPER: scan all sides for disk drives containing a driver.lua
+local function scanForDrivers()
+  local found = {}
+  for _, side in ipairs({"top", "bottom", "left", "right", "front", "back"}) do
+    if peripheral.isPresent(side) and peripheral.getType(side) == "drive" then
+      local path = disk.getMountPath(side)
+      if path and fs.exists(path .. "/driver.lua") then
+        local fn = loadfile(path .. "/driver.lua")
+        if fn then
+          local ok, driver = pcall(fn)
+          if ok and driver and driver.name then
+            table.insert(found, driver)
+          end
+        end
+      end
+    end
+  end
+  return found
 end
 
 local function showQuitDialog(keepContent)
@@ -73,7 +93,7 @@ local function showQuitDialog(keepContent)
   end
   term.setTextColor(colors.red)
   term.setCursorPos(x0 + 2, y0 + 1)
-  io.write("Windows 2000 is not completely set up")
+  io.write("Windows 2000 is not completely set up.")
   term.setCursorPos(x0 + 2, y0 + 2)
   io.write("If you quit Setup, you will need to run")
   term.setCursorPos(x0 + 2, y0 + 3)
@@ -106,7 +126,6 @@ local function drawRebootScreen(showCountdown)
   term.setCursorPos(3, 8)
   io.write("remove it. Press ENTER to restart your computer.")
   writeBottom("ENTER=Restart Computer")
-
   if showCountdown then
     local bw = 46
     local bx = math.floor((w - bw) / 2) + 1
@@ -151,7 +170,6 @@ local function drawRebootScreen(showCountdown)
       end
     end
   else
-    -- simple version, just wait for enter
     while true do
       local event, p1 = os.pullEvent()
       if event == "key" and p1 == keys.enter then
@@ -159,7 +177,6 @@ local function drawRebootScreen(showCountdown)
       end
     end
   end
-
   os.reboot()
 end
 
@@ -179,7 +196,8 @@ local function drawScreen1()
     if event == "timer" and p1 == timer then
       break
     elseif event == "key" and p1 == keys.f6 then
-      drawDriverScreen()
+      local drivers = scanForDrivers()  -- scan before opening screen
+      drawDriverScreen(drivers)
     end
   end
 end
@@ -223,7 +241,7 @@ local function drawScreen3()
       break
     elseif key == keys.f3 then
       if showQuitDialog(true) then
-        drawRebootScreen(true)  -- countdown version
+        drawRebootScreen(true)
       else
         drawScreen3()
       end
@@ -235,7 +253,7 @@ end
 -- SUB-SCREENS
 -- ==============================
 
-drawDriverScreen = function()
+drawDriverScreen = function(drivers)
   term.setBackgroundColor(colors.blue)
   term.setTextColor(colors.white)
   term.clear()
@@ -248,6 +266,18 @@ drawDriverScreen = function()
   io.write("Currently, Setup will load support for the")
   term.setCursorPos(2, 7)
   io.write("following mass storage devices(s):")
+
+  -- show found drivers or <none>
+  if #drivers == 0 then
+    term.setCursorPos(4, 9)
+    io.write("<none>")
+  else
+    for i, driver in ipairs(drivers) do
+      term.setCursorPos(4, 8 + i)
+      io.write(driver.name .. " (" .. (driver.type or "Unknown") .. ")")
+    end
+  end
+
   writeBottom("S=Specify Additional Device   ENTER=Continue", "F3=Exit")
   while true do
     local event, p1 = os.pullEvent()
@@ -259,9 +289,9 @@ drawDriverScreen = function()
       -- specify device (add later)
     elseif event == "key" and p1 == keys.f3 then
       if showQuitDialog(false) then
-        drawRebootScreen(false)  -- simple version
+        drawRebootScreen(false)
       else
-        drawDriverScreen()
+        drawDriverScreen(drivers)
         break
       end
     end
